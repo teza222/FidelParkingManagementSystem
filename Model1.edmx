@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="Fidel_Parking_Management_SystemModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Media">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="url" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Payments">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TicketNumber" Type="nvarchar" MaxLength="50" />
+          <Property Name="Paid" Type="int" />
+          <Property Name="TimeStamp" Type="datetime" />
+        </EntityType>
+        <EntityType Name="UserAccounts">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserName" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Password" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="profilePhotoURL" Type="nvarchar" MaxLength="100" />
+        </EntityType>
+        <EntityType Name="VehiclesDetected">
+          <Key>
+            <PropertyRef Name="TicketNumber" />
+          </Key>
+          <Property Name="TicketNumber" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Operation" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="LicensePlateNumber" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Make" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Model" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Color" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="EntryDate" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="EntryTime" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="ExitDate" Type="nvarchar" MaxLength="50" />
+          <Property Name="ExitTime" Type="nvarchar" MaxLength="50" />
+          <Property Name="Duration" Type="nvarchar" MaxLength="50" />
+          <Property Name="PaymentId" Type="int" />
+          <Property Name="MediaId" Type="int" />
+        </EntityType>
+        <Association Name="FK_VehiclesDetected_Media">
+          <End Role="Media" Type="Self.Media" Multiplicity="0..1" />
+          <End Role="VehiclesDetected" Type="Self.VehiclesDetected" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Media">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="VehiclesDetected">
+              <PropertyRef Name="MediaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VehiclesDetected_Payments">
+          <End Role="Payments" Type="Self.Payments" Multiplicity="0..1" />
+          <End Role="VehiclesDetected" Type="Self.VehiclesDetected" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Payments">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="VehiclesDetected">
+              <PropertyRef Name="PaymentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="Fidel_Parking_Management_SystemModelStoreContainer">
+          <EntitySet Name="Media" EntityType="Self.Media" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserAccounts" EntityType="Self.UserAccounts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="VehiclesDetected" EntityType="Self.VehiclesDetected" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_VehiclesDetected_Media" Association="Self.FK_VehiclesDetected_Media">
+            <End Role="Media" EntitySet="Media" />
+            <End Role="VehiclesDetected" EntitySet="VehiclesDetected" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VehiclesDetected_Payments" Association="Self.FK_VehiclesDetected_Payments">
+            <End Role="Payments" EntitySet="Payments" />
+            <End Role="VehiclesDetected" EntitySet="VehiclesDetected" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="Fidel_Parking_Management_SystemModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="Fidel_Parking_Management_SystemEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Media" EntityType="Fidel_Parking_Management_SystemModel.Medium" />
+          <EntitySet Name="Payments" EntityType="Fidel_Parking_Management_SystemModel.Payment" />
+          <EntitySet Name="UserAccounts" EntityType="Fidel_Parking_Management_SystemModel.UserAccount" />
+          <EntitySet Name="VehiclesDetecteds" EntityType="Fidel_Parking_Management_SystemModel.VehiclesDetected" />
+          <AssociationSet Name="FK_VehiclesDetected_Media" Association="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Media">
+            <End Role="Medium" EntitySet="Media" />
+            <End Role="VehiclesDetected" EntitySet="VehiclesDetecteds" />
+          </AssociationSet>
+          <AssociationSet Name="FK_VehiclesDetected_Payments" Association="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Payments">
+            <End Role="Payment" EntitySet="Payments" />
+            <End Role="VehiclesDetected" EntitySet="VehiclesDetecteds" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="Medium">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="url" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="VehiclesDetecteds" Relationship="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Media" FromRole="Medium" ToRole="VehiclesDetected" />
+        </EntityType>
+        <EntityType Name="Payment">
+          <Key>
+            <PropertyRef Name="id" />
+          </Key>
+          <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="TicketNumber" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Paid" Type="Int32" />
+          <Property Name="TimeStamp" Type="DateTime" Precision="3" />
+          <NavigationProperty Name="VehiclesDetecteds" Relationship="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Payments" FromRole="Payment" ToRole="VehiclesDetected" />
+        </EntityType>
+        <EntityType Name="UserAccount">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Password" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="profilePhotoURL" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="VehiclesDetected">
+          <Key>
+            <PropertyRef Name="TicketNumber" />
+          </Key>
+          <Property Name="TicketNumber" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Operation" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="LicensePlateNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Make" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Model" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Color" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="EntryDate" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="EntryTime" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ExitDate" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="ExitTime" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="Duration" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="PaymentId" Type="Int32" />
+          <Property Name="MediaId" Type="Int32" />
+          <NavigationProperty Name="Medium" Relationship="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Media" FromRole="VehiclesDetected" ToRole="Medium" />
+          <NavigationProperty Name="Payment" Relationship="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Payments" FromRole="VehiclesDetected" ToRole="Payment" />
+        </EntityType>
+        <Association Name="FK_VehiclesDetected_Media">
+          <End Type="Fidel_Parking_Management_SystemModel.Medium" Role="Medium" Multiplicity="0..1" />
+          <End Type="Fidel_Parking_Management_SystemModel.VehiclesDetected" Role="VehiclesDetected" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Medium">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="VehiclesDetected">
+              <PropertyRef Name="MediaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_VehiclesDetected_Payments">
+          <End Type="Fidel_Parking_Management_SystemModel.Payment" Role="Payment" Multiplicity="0..1" />
+          <End Type="Fidel_Parking_Management_SystemModel.VehiclesDetected" Role="VehiclesDetected" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Payment">
+              <PropertyRef Name="id" />
+            </Principal>
+            <Dependent Role="VehiclesDetected">
+              <PropertyRef Name="PaymentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="Fidel_Parking_Management_SystemModelStoreContainer" CdmEntityContainer="Fidel_Parking_Management_SystemEntities">
+          <EntitySetMapping Name="Media">
+            <EntityTypeMapping TypeName="Fidel_Parking_Management_SystemModel.Medium">
+              <MappingFragment StoreEntitySet="Media">
+                <ScalarProperty Name="url" ColumnName="url" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Payments">
+            <EntityTypeMapping TypeName="Fidel_Parking_Management_SystemModel.Payment">
+              <MappingFragment StoreEntitySet="Payments">
+                <ScalarProperty Name="TimeStamp" ColumnName="TimeStamp" />
+                <ScalarProperty Name="Paid" ColumnName="Paid" />
+                <ScalarProperty Name="TicketNumber" ColumnName="TicketNumber" />
+                <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserAccounts">
+            <EntityTypeMapping TypeName="Fidel_Parking_Management_SystemModel.UserAccount">
+              <MappingFragment StoreEntitySet="UserAccounts">
+                <ScalarProperty Name="profilePhotoURL" ColumnName="profilePhotoURL" />
+                <ScalarProperty Name="Password" ColumnName="Password" />
+                <ScalarProperty Name="UserName" ColumnName="UserName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="VehiclesDetecteds">
+            <EntityTypeMapping TypeName="Fidel_Parking_Management_SystemModel.VehiclesDetected">
+              <MappingFragment StoreEntitySet="VehiclesDetected">
+                <ScalarProperty Name="MediaId" ColumnName="MediaId" />
+                <ScalarProperty Name="PaymentId" ColumnName="PaymentId" />
+                <ScalarProperty Name="Duration" ColumnName="Duration" />
+                <ScalarProperty Name="ExitTime" ColumnName="ExitTime" />
+                <ScalarProperty Name="ExitDate" ColumnName="ExitDate" />
+                <ScalarProperty Name="EntryTime" ColumnName="EntryTime" />
+                <ScalarProperty Name="EntryDate" ColumnName="EntryDate" />
+                <ScalarProperty Name="Color" ColumnName="Color" />
+                <ScalarProperty Name="Model" ColumnName="Model" />
+                <ScalarProperty Name="Make" ColumnName="Make" />
+                <ScalarProperty Name="LicensePlateNumber" ColumnName="LicensePlateNumber" />
+                <ScalarProperty Name="Operation" ColumnName="Operation" />
+                <ScalarProperty Name="TicketNumber" ColumnName="TicketNumber" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>
