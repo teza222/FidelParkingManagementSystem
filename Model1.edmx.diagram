@@ -5,8 +5,8 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="051d1d62a4bf4f6992e3ad7a16763cb2" Name="Diagram1">
-        <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.Medium" Width="1.5" PointX="0.75" PointY="2.125" />
-        <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.Payment" Width="1.5" PointX="0.75" PointY="6" />
+        <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.Medium" Width="1.5" PointX="0.75" PointY="6.125" />
+        <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.Payment" Width="1.5" PointX="0.75" PointY="2.125" />
         <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.UserAccount" Width="1.5" PointX="5.75" PointY="0.75" />
         <EntityTypeShape EntityType="Fidel_Parking_Management_SystemModel.VehiclesDetected" Width="1.5" PointX="3" PointY="1" />
         <AssociationConnector Association="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Media" />

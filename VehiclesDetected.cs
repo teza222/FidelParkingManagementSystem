@@ -20,10 +20,10 @@ namespace FidelParkingManagementSystem
         public string Make { get; set; }
         public string Model { get; set; }
         public string Color { get; set; }
-        public string EntryDate { get; set; }
-        public string EntryTime { get; set; }
-        public string ExitDate { get; set; }
-        public string ExitTime { get; set; }
+        public System.DateTime EntryDate { get; set; }
+        public System.TimeSpan EntryTime { get; set; }
+        public Nullable<System.DateTime> ExitDate { get; set; }
+        public Nullable<System.TimeSpan> ExitTime { get; set; }
         public string Duration { get; set; }
         public Nullable<int> PaymentId { get; set; }
         public Nullable<int> MediaId { get; set; }

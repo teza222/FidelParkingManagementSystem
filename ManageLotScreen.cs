@@ -3,17 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FidelParkingManagementSystem
 {
 
-   
+
 
     public partial class ManageLotScreen : Form
     {
@@ -24,16 +30,25 @@ namespace FidelParkingManagementSystem
         private string licensePlate;
         private int ticketNumber;
         private string operation;
-        private string entryDate;
-        private string entryTime;
-        private string exitDate;
-        private string exitTime;
+        private DateTime entryDate;
+        private TimeSpan entryTime;
+        private DateTime exitDate;
+        private TimeSpan exitTime;
         private string color;
-        private string duration;
+        private String duration;
         private int mediaId;
         private string imgUrl;
-       
-      
+        private double targetX; // Target X position (center of the screen)
+        private double speed = 5;
+        private Timer timer;
+        private int xLocation;
+        private int yLocation;
+        LoadingForm loadingForm;
+        private bool isEditMode;
+
+
+
+
 
         static Random random = new Random();
 
@@ -47,7 +62,7 @@ namespace FidelParkingManagementSystem
             //"Mazda"
         };
 
-        
+
         //list of car models simulating possible car models that can be detected by the camera
         List<CarMake> carModle = new List<CarMake>
         {
@@ -99,7 +114,7 @@ namespace FidelParkingManagementSystem
                 digits[i] = (char)('0' + random.Next(0, 10));
             }
 
-            return new string(digits) +" "+ new string(letters);
+            return new string(digits) + " " + new string(letters);
         }
 
         // Generates a random car make and model. simulating a car detected by a Ai camera
@@ -108,14 +123,12 @@ namespace FidelParkingManagementSystem
             Random random = new Random();
             int randomIndex = random.Next(carMake.Count);
             operation = "Entry";
-            entryDate = DateTime.Now.ToString("dd/MM/yyyy");
-            entryTime = DateTime.Now.ToString("HH:mm:ss");
-            exitDate = "N/A";
-            exitTime = "N/A";
+            entryDate = DateTime.Now;
+            entryTime = TimeSpan.Parse(DateTime.Now.ToString("HH:mm:ss"));
             ticketNumber = random.Next(1000, 9999);
             color = "Red";
             duration = "N/A";
-            imgUrl = "TestImage34.com";
+
 
             vehicleMake = carMake[randomIndex];
             vehicleModel = carModle[randomIndex].Models[random.Next(carModle[randomIndex].Models.Count)];
@@ -123,14 +136,14 @@ namespace FidelParkingManagementSystem
 
             // Display the details.
             lbOperation.Text = operation;
-            lbEntryTime.Text = entryTime;
-            lbExitTime.Text = exitTime;
+            lbEntryTime.Text = entryTime.ToString();
             lbColor.Text = color;
             lbDuration.Text = duration;
             lbmake.Text = vehicleMake;
             lbModel.Text = vehicleModel;
+            lbExitTime.Text = "N/A";
             lbLicensePlate.Text = licensePlate;
-     
+
         }
 
         public ManageLotScreen()
@@ -141,6 +154,14 @@ namespace FidelParkingManagementSystem
             timer.Tick += Timer_Tick;
             timer.Start();
             _db = new Fidel_Parking_Management_SystemEntities();
+            isEditMode = false;
+
+            UpdateSpaceNumbers();
+
+            xLocation = this.Location.X;
+            yLocation = this.Location.Y;
+
+
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -162,25 +183,44 @@ namespace FidelParkingManagementSystem
             }
         }
 
+
         private async void btEntryGate_Click(object sender, EventArgs e)
         {
+
+            loadingSate(true);
+            //clear the vehicle details on the form
+            if (!string.IsNullOrEmpty(lbModel.Text))
+            {
+                clearVehicleDetails();
+                await Task.Delay(2000);
+            }
+
+            // Generate a random car make and model.
+
             GenerateMake();
 
             try
             {
-                //demo detected car image simulating a car detected by the camera
-                
+
+
+                //demo detected car image simulating a car detected by the camera      
                 string imagePath = $"dectected_cars/{vehicleModel}.png";
                 Image image = Image.FromFile(imagePath);
                 imgCarImage.Image = image;
+                lbParkingAI.Text = "VEHICLE DETECTED!";
+                lbParkingAI.BackColor = Color.Crimson;
+                await Task.Delay(1000);
+                loadingSate(false);
+
             }
             catch (Exception ex)
             {
+                loadingSate(false);
                 MessageBox.Show($"Error loading image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             //saving vehicle so-called url to the database
             var vehiclePhoto = new Medium();
-            vehiclePhoto.url = "vehicleModel";
+            vehiclePhoto.url = vehicleModel;
             _db.Media.Add(vehiclePhoto);
             _db.SaveChanges();
 
@@ -198,15 +238,382 @@ namespace FidelParkingManagementSystem
             vehicleDetected.Make = vehicleMake;
             vehicleDetected.Model = vehicleModel;
             vehicleDetected.Color = "Red";
-            vehicleDetected.Duration = duration;
+            vehicleDetected.Duration = "N/A";
             vehicleDetected.MediaId = vehiclePhotoID;
 
             _db.VehiclesDetecteds.Add(vehicleDetected);
             _db.SaveChanges();
 
-            lbTicket.Text = vehicleDetected.TicketNumber.ToString();
+            ticketNumber = vehicleDetected.TicketNumber;
+            lbTicket.Text = ticketNumber.ToString();
+
+            UpdateSpaceNumbers();
         }
 
+        //this function is called to update the space numbers on the form
+        private void UpdateSpaceNumbers()
+        {
+            try
+            {
+                //get the number of vehicles in the lot and the number of reserved spaces
+                var vehicleCount = _db.Database.SqlQuery<int>("EXEC CountVehiclesInLot").FirstOrDefault();
+                // var vehicleCountReserved = _db.Database.SqlQuery<int>("EXEC CountReservedVehicles").FirstOrDefault();
+                var reservationCount = LoadReservationGridView();
+                int availableSpace = (300 - vehicleCount) - reservationCount;
+
+                //update the space numbers on the form with the values from the database
+                tbSpaceOccupied.Text = vehicleCount.ToString();
+                tbAvailableSpace.Text = availableSpace.ToString();
+                tbReservedSpaced.Text = reservationCount.ToString();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error reading from the database: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void btExitGate_Click(object sender, EventArgs e)
+        {
+            //clear the vehicle details on the form
+            if (!string.IsNullOrEmpty(lbModel.Text))
+            {
+                clearVehicleDetails();
+                await Task.Delay(2000);
+            }
+
+            // Show loading popup while processing
+            loadingSate(true);
+
+            var carExiting = _db.VehiclesDetecteds.OrderBy(v => v.TicketNumber).Where(v => v.Operation == "Entry").FirstOrDefault();
+
+            if (carExiting != null)
+            {
+                //update the vehicle details when the vehicle exits the lot
+                operation = "Exit";
+                vehicleMake = carExiting.Make;
+                vehicleModel = carExiting.Model;
+                entryTime = carExiting.EntryTime;
+                ticketNumber = carExiting.TicketNumber;
+                exitDate = DateTime.Now;
+                exitTime = TimeSpan.Parse(DateTime.Now.ToString("HH:mm:ss"));
+
+                //calculate the duration the vehicle was in the lot
+                DateTime startDateTime = carExiting.EntryDate.Date.Add(carExiting.EntryTime);
+                DateTime endDateTime = DateTime.Now;
+                TimeSpan durationTemp = endDateTime - startDateTime;
+                double totalDuration = durationTemp.TotalHours;
+                int hours = (int)Math.Floor(totalDuration);
+                double remainderHours = totalDuration - hours;
+                int minutes = (int)(remainderHours * 60);
+                duration = hours + " hrs " + minutes + " mins";
+                calculatePrice(carExiting, totalDuration);
+
+
+                //updating the exiting vehicle details in the database
+                carExiting.Operation = operation;
+                carExiting.ExitDate = exitDate;
+                carExiting.ExitTime = exitTime;
+                carExiting.Duration = duration;
+                _db.VehiclesDetecteds.AddOrUpdate(carExiting);
+                _db.SaveChanges();
+
+                //demo detected car image simulating a car detected by the camera      
+                string imagePath = $"dectected_cars/{vehicleModel}.png";
+                Image image = Image.FromFile(imagePath);
+                imgCarImage.Image = image;
+                lbParkingAI.Text = "VEHICLE DETECTED!";
+                lbParkingAI.BackColor = Color.Crimson;
+                lbOperation.Text = operation;
+                lbTicket.Text = ticketNumber.ToString();
+                lbEntryTime.Text = entryTime.ToString();
+                lbExitTime.Text = exitTime.ToString();
+                lbColor.Text = "Red";
+                lbmake.Text = vehicleMake;
+                lbModel.Text = vehicleModel;
+                lbLicensePlate.Text = carExiting.LicensePlateNumber;
+                lbDuration.Text = duration;
+
+                await Task.Delay(1000);
+                loadingSate(false);
+
+                //update the space numbers on the form
+                UpdateSpaceNumbers();
+            }
+
+            else
+            {
+                MessageBox.Show("No vehicles in the lot.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private void calculatePrice(VehiclesDetected vehiclesExiting, double minutes)
+        {
+
+            try
+            {
+                //calculate the total hours and round up to the nearest hour
+
+                int roundedHours = (int)Math.Ceiling(minutes);
+                double cost = roundedHours * 250;
+                //calculate overtime charges
+                if (roundedHours > 10)
+                {
+                    cost += (roundedHours - 10) * 100;
+                    lbOverstayed.Text = $"Overstayed: ${((roundedHours - 10) * 100).ToString()}";
+                }
+                lbPaid.Text = $"Paid: ${cost.ToString()}";
+
+                //save the payment details to the database
+                Payment payment = new Payment();
+                payment.Paid = (decimal)cost;
+                payment.TimeStamp = DateTime.Now;
+
+                _db.Payments.Add(payment);
+                _db.SaveChanges();
+
+                //update the vehicle details with the payment id
+                vehiclesExiting.PaymentId = payment.id;
+                _db.VehiclesDetecteds.AddOrUpdate(vehiclesExiting);
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error calculating price: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+            }
+
+        }
+
+        private async void clearVehicleDetails()
+        {
+
+            lbOperation.Text = "";
+            lbEntryTime.Text = "";
+            lbExitTime.Text = "";
+            lbColor.Text = "";
+            lbDuration.Text = "";
+            lbmake.Text = "";
+            lbModel.Text = "";
+            lbLicensePlate.Text = "";
+            lbTicket.Text = "";
+            lbPaid.Text = "";
+            lbOverstayed.Text = "";
+            lbParkingAI.Text = "PARKING AI WAITING";
+            lbParkingAI.BackColor = Color.DeepSkyBlue;
+            string imagePaths = "dectected_cars/blankcar.png";
+            Image images = Image.FromFile(imagePaths);
+            imgCarImage.Image = images;
+
+            //Rservation details
+            tbColorRES.Text = String.Empty;
+            tbMakeRES.Text = String.Empty;
+            tbModelRES.Text = String.Empty;
+            tbLicensePlateRES.Text = String.Empty;
+
+
+
+        }
+        private int LoadReservationGridView()
+        {
+            var reservations = _db.VehiclesDetecteds.Where(q => q.Operation == "Reservation").Select(q => new
+            {
+                q.TicketNumber,
+                q.Operation,
+                q.LicensePlateNumber,
+                q.Make,
+                q.Model,
+                q.Color,
+                q.EntryDate,
+                q.EntryTime,
+
+            }).ToList();//.Where(v => v.Operation == "Entry").FirstOrDefault();
+            gvReservations.DataSource = reservations;
+            gvReservations.Columns[6].HeaderText = "Reservation Date";
+            gvReservations.Columns[7].HeaderText = "Reservation Time";
+            gvReservations.Update();
+            gvReservations.Refresh();
+
+            return reservations.Count;
+        }
+
+        private void btReservation_Click(object sender, EventArgs e)
+        {
+
+            //show the reservation details on the form
+            LoadReservationGridView();
+
+            imgCarImage.Visible = false;
+            btEntryGate.Visible = false;
+            btExitGate.Visible = false;
+            btReservation.Visible = false;
+            btAdd.Visible = true;
+            btEdit.Visible = true;
+            btDelete.Visible = true;
+            gvReservations.Visible = true;
+            lbParkingAI.Text = "RESERVATIONS";
+            lbParkingAI.BackColor = Color.Blue;
+            tlDetails.Visible = false;
+            tlReservation.Visible = true;
+            btCancel.Visible = true;
+
+
+        }
+
+        private void btCancel_Click(object sender, EventArgs e)
+        {
+            clearVehicleDetails();
+            imgCarImage.Visible = true;
+            btEntryGate.Visible = true;
+            btExitGate.Visible = true;
+            btReservation.Visible = true;
+            btAdd.Visible = false;
+            btEdit.Visible = false;
+            btDelete.Visible = false;
+            gvReservations.Visible = false;
+            lbParkingAI.Text = "PARKING AI WAITING";
+            lbParkingAI.BackColor = Color.DeepSkyBlue;
+            tlDetails.Visible = true;
+            tlReservation.Visible = false;
+            btCancel.Visible = false;
+
+        }
+
+        private void btAdd_Click(object sender, EventArgs e)
+        {
+
+            if (string.IsNullOrEmpty(tbLicensePlateRES.Text) || string.IsNullOrEmpty(tbMakeRES.Text) || string.IsNullOrEmpty(tbModelRES.Text) || string.IsNullOrEmpty(tbColorRES.Text))
+            {
+                MessageBox.Show("Please fill in all the fields", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+
+            try
+            {
+                loadingSate(true);
+                var ReservedLot = new VehiclesDetected();
+                ReservedLot.Operation = "Reservation";
+                ReservedLot.EntryDate = DateTime.Now;
+                ReservedLot.EntryTime = TimeSpan.Parse(DateTime.Now.ToString("HH:mm:ss"));
+                ReservedLot.LicensePlateNumber = tbLicensePlateRES.Text;
+                ReservedLot.Make = tbMakeRES.Text;
+                ReservedLot.Model = tbModelRES.Text;
+                ReservedLot.Color = tbColorRES.Text;
+
+                if (isEditMode)
+                {
+                    var ticketNumber = gvReservations.SelectedRows[0].Cells[0].Value;
+                    ReservedLot.TicketNumber = (int)ticketNumber;
+                    isEditMode = false;
+                }
+
+                _db.VehiclesDetecteds.AddOrUpdate(ReservedLot);
+                _db.SaveChanges();
+                loadingSate(false);
+
+                MessageBox.Show(
+           "The Reservation was saved successfully.",
+           "Reservation Saved",
+           MessageBoxButtons.OK,
+           MessageBoxIcon.Information
+       );
+
+                gvReservations.Refresh();
+                UpdateSpaceNumbers();
+                clearVehicleDetails();
+                lbParkingAI.Text = "RESERVATIONS";
+                lbParkingAI.BackColor = Color.Blue;
+
+                //show the reservation details on the form
+                LoadReservationGridView();
+               
+            }
+            catch (Exception)
+            {
+                loadingSate(false);
+                MessageBox.Show("Error adding reservation", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+        private void loadingSate(bool state)
+        {
+
+            if (state)
+            {
+                // Show loading popup while processing
+                loadingForm = new LoadingForm();
+
+                loadingForm.StartPosition = FormStartPosition.Manual;
+                loadingForm.Location = new Point(
+                    this.Location.X + (this.Width - loadingForm.Width) / 2,
+                    this.Location.Y + (this.Height - loadingForm.Height) / 2
+                );
+                loadingForm.Show();
+                loadingForm.Refresh();
+
+            }
+            else
+            {
+                loadingForm.Close();
+            }
+        }
+
+        private void btEdit_Click(object sender, EventArgs e)
+        {
+            var ticketNumber = gvReservations.SelectedRows[0].Cells[0].Value;
+            var reservation = _db.VehiclesDetecteds.Where(v => v.TicketNumber == (int)ticketNumber).FirstOrDefault();
+            if (reservation != null)
+            {
+                isEditMode = true;
+                tbLicensePlateRES.Text = reservation.LicensePlateNumber;
+                tbMakeRES.Text = reservation.Make;
+                tbModelRES.Text = reservation.Model;
+                tbColorRES.Text = reservation.Color;
+
+            }
+        }
+
+
+
+        private async void btDelete_Click(object sender, EventArgs e)
+        {
+
+            if (gvReservations.SelectedRows.Count > 0)
+            {
+               
+                var ticketNumber = gvReservations.SelectedRows[0].Cells[0].Value;
+                var reservation = _db.VehiclesDetecteds.Where(v => v.TicketNumber == (int)ticketNumber).FirstOrDefault();
+                if (reservation != null)
+                {
+                    // Show a confirmation dialog
+                    var result = MessageBox.Show(
+                        $"Are you sure you want to delete the record with Ticket Number: {ticketNumber}?",
+                        "Delete Confirmation",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question
+                    );
+
+
+                    if (result == DialogResult.Yes)
+                    {
+                        loadingSate(true);
+                        _db.VehiclesDetecteds.Remove(reservation);
+                        _db.SaveChanges();
+                        await Task.Delay(1000);
+                        LoadReservationGridView();
+                        UpdateSpaceNumbers();
+                        loadingSate(false);
+                    }
+                }
+                
+
+            }
+            else
+            {
+                MessageBox.Show("Please select a reservation to delete.");
+            }
+        }
     }
 }
 // Class to hold a car make and its models.

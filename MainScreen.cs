@@ -17,7 +17,19 @@ namespace FidelParkingManagementSystem
             InitializeComponent();
             this.IsMdiContainer = true;
             this.WindowState = FormWindowState.Maximized;
+            this.Text = "Fidel Parking Management System";
+            manageLotToolStripMenuItem.Visible = false;
+            reportsToolStripMenuItem.Visible = false;
+
+
         }
+        public void EnableMenus()
+        {
+            manageLotToolStripMenuItem.Visible = true;
+            reportsToolStripMenuItem.Visible = true;
+        }
+
+
 
 
         private void MainScreen_Load(object sender, EventArgs e)
@@ -52,7 +64,7 @@ namespace FidelParkingManagementSystem
 
         }
 
-
+        
 
         private void exitToolStripMenuItem1_Click_1(object sender, EventArgs e)
         {

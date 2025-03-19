@@ -12,6 +12,8 @@ namespace FidelParkingManagementSystem
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Entity.Core.Objects;
+    using System.Linq;
     
     public partial class Fidel_Parking_Management_SystemEntities : DbContext
     {
@@ -29,5 +31,38 @@ namespace FidelParkingManagementSystem
         public virtual DbSet<Payment> Payments { get; set; }
         public virtual DbSet<UserAccount> UserAccounts { get; set; }
         public virtual DbSet<VehiclesDetected> VehiclesDetecteds { get; set; }
+    
+        public virtual ObjectResult<Nullable<int>> CountVehicles()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<int>>("CountVehicles");
+        }
+    
+        public virtual ObjectResult<Nullable<int>> CountReservedVehicles()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<int>>("CountReservedVehicles");
+        }
+    
+        public virtual ObjectResult<Nullable<int>> GetHoursDifferenceByTicketNumber(Nullable<int> ticketNumber)
+        {
+            var ticketNumberParameter = ticketNumber.HasValue ?
+                new ObjectParameter("TicketNumber", ticketNumber) :
+                new ObjectParameter("TicketNumber", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<int>>("GetHoursDifferenceByTicketNumber", ticketNumberParameter);
+        }
+    
+        public virtual ObjectResult<GetHoursAndMinutesDifference_Result> GetHoursAndMinutesDifference(Nullable<int> ticketNumber)
+        {
+            var ticketNumberParameter = ticketNumber.HasValue ?
+                new ObjectParameter("TicketNumber", ticketNumber) :
+                new ObjectParameter("TicketNumber", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<GetHoursAndMinutesDifference_Result>("GetHoursAndMinutesDifference", ticketNumberParameter);
+        }
+    
+        public virtual ObjectResult<Nullable<int>> CountVehiclesInLot()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<int>>("CountVehiclesInLot");
+        }
     }
 }

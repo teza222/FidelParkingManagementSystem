@@ -17,8 +17,7 @@
             <PropertyRef Name="id" />
           </Key>
           <Property Name="id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="TicketNumber" Type="nvarchar" MaxLength="50" />
-          <Property Name="Paid" Type="int" />
+          <Property Name="Paid" Type="money" />
           <Property Name="TimeStamp" Type="datetime" />
         </EntityType>
         <EntityType Name="UserAccounts">
@@ -40,10 +39,10 @@
           <Property Name="Make" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="Model" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="Color" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="EntryDate" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="EntryTime" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="ExitDate" Type="nvarchar" MaxLength="50" />
-          <Property Name="ExitTime" Type="nvarchar" MaxLength="50" />
+          <Property Name="EntryDate" Type="date" Nullable="false" />
+          <Property Name="EntryTime" Type="time" Precision="7" Nullable="false" />
+          <Property Name="ExitDate" Type="date" />
+          <Property Name="ExitTime" Type="time" Precision="7" />
           <Property Name="Duration" Type="nvarchar" MaxLength="50" />
           <Property Name="PaymentId" Type="int" />
           <Property Name="MediaId" Type="int" />
@@ -72,6 +71,14 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="CountReservedVehicles" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="CountVehiclesInLot" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="GetHoursAndMinutesDifference" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="TicketNumber" Type="int" Mode="In" />
+        </Function>
+        <Function Name="GetHoursDifferenceByTicketNumber" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="TicketNumber" Type="int" Mode="In" />
+        </Function>
         <EntityContainer Name="Fidel_Parking_Management_SystemModelStoreContainer">
           <EntitySet Name="Media" EntityType="Self.Media" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Payments" EntityType="Self.Payments" Schema="dbo" store:Type="Tables" />
@@ -91,6 +98,14 @@
     <edmx:ConceptualModels>
       <Schema Namespace="Fidel_Parking_Management_SystemModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityContainer Name="Fidel_Parking_Management_SystemEntities" annotation:LazyLoadingEnabled="true">
+          <FunctionImport Name="CountVehicles" ReturnType="Collection(Int32)" />
+          <FunctionImport Name="CountReservedVehicles" ReturnType="Collection(Int32)" />
+          <FunctionImport Name="GetHoursDifferenceByTicketNumber" ReturnType="Collection(Int32)">
+          <Parameter Name="TicketNumber" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <FunctionImport Name="GetHoursAndMinutesDifference" ReturnType="Collection(Fidel_Parking_Management_SystemModel.GetHoursAndMinutesDifference_Result)">
+          <Parameter Name="TicketNumber" Mode="In" Type="Int32" />
+          </FunctionImport>
           <EntitySet Name="Media" EntityType="Fidel_Parking_Management_SystemModel.Medium" />
           <EntitySet Name="Payments" EntityType="Fidel_Parking_Management_SystemModel.Payment" />
           <EntitySet Name="UserAccounts" EntityType="Fidel_Parking_Management_SystemModel.UserAccount" />
@@ -103,7 +118,12 @@
             <End Role="Payment" EntitySet="Payments" />
             <End Role="VehiclesDetected" EntitySet="VehiclesDetecteds" />
           </AssociationSet>
-        </EntityContainer>
+          <FunctionImport Name="CountVehiclesInLot" ReturnType="Collection(Int32)" />
+          </EntityContainer>
+        <ComplexType Name="GetHoursAndMinutesDifference_Result">
+          <Property Type="Int32" Name="HoursDifference" Nullable="true" />
+          <Property Type="Int32" Name="MinutesDifference" Nullable="true" />
+        </ComplexType>
         <EntityType Name="Medium">
           <Key>
             <PropertyRef Name="id" />
@@ -117,8 +137,7 @@
             <PropertyRef Name="id" />
           </Key>
           <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="TicketNumber" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="Paid" Type="Int32" />
+          <Property Name="Paid" Type="Decimal" Precision="19" Scale="4" />
           <Property Name="TimeStamp" Type="DateTime" Precision="3" />
           <NavigationProperty Name="VehiclesDetecteds" Relationship="Fidel_Parking_Management_SystemModel.FK_VehiclesDetected_Payments" FromRole="Payment" ToRole="VehiclesDetected" />
         </EntityType>
@@ -141,10 +160,10 @@
           <Property Name="Make" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="Model" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="Color" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="EntryDate" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="EntryTime" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="ExitDate" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
-          <Property Name="ExitTime" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="EntryDate" Type="DateTime" Nullable="false" Precision="0" />
+          <Property Name="EntryTime" Type="Time" Nullable="false" Precision="7" />
+          <Property Name="ExitDate" Type="DateTime" Precision="0" />
+          <Property Name="ExitTime" Type="Time" Precision="7" />
           <Property Name="Duration" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="PaymentId" Type="Int32" />
           <Property Name="MediaId" Type="Int32" />
@@ -181,6 +200,16 @@
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="Fidel_Parking_Management_SystemModelStoreContainer" CdmEntityContainer="Fidel_Parking_Management_SystemEntities">
+          <FunctionImportMapping FunctionImportName="CountReservedVehicles" FunctionName="Fidel_Parking_Management_SystemModel.Store.CountReservedVehicles" />
+          <FunctionImportMapping FunctionImportName="GetHoursDifferenceByTicketNumber" FunctionName="Fidel_Parking_Management_SystemModel.Store.GetHoursDifferenceByTicketNumber" />
+          <FunctionImportMapping FunctionImportName="GetHoursAndMinutesDifference" FunctionName="Fidel_Parking_Management_SystemModel.Store.GetHoursAndMinutesDifference">
+            <ResultMapping>
+              <ComplexTypeMapping TypeName="Fidel_Parking_Management_SystemModel.GetHoursAndMinutesDifference_Result">
+                <ScalarProperty Name="HoursDifference" ColumnName="HoursDifference" />
+                <ScalarProperty Name="MinutesDifference" ColumnName="MinutesDifference" />
+              </ComplexTypeMapping>
+            </ResultMapping>
+          </FunctionImportMapping>
           <EntitySetMapping Name="Media">
             <EntityTypeMapping TypeName="Fidel_Parking_Management_SystemModel.Medium">
               <MappingFragment StoreEntitySet="Media">
@@ -194,7 +223,6 @@
               <MappingFragment StoreEntitySet="Payments">
                 <ScalarProperty Name="TimeStamp" ColumnName="TimeStamp" />
                 <ScalarProperty Name="Paid" ColumnName="Paid" />
-                <ScalarProperty Name="TicketNumber" ColumnName="TicketNumber" />
                 <ScalarProperty Name="id" ColumnName="id" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -228,7 +256,8 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-        </EntityContainerMapping>
+          <FunctionImportMapping FunctionImportName="CountVehiclesInLot" FunctionName="Fidel_Parking_Management_SystemModel.Store.CountVehiclesInLot" />
+          </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
   </edmx:Runtime>
