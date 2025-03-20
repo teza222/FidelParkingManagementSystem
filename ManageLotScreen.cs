@@ -59,11 +59,45 @@ namespace FidelParkingManagementSystem
             "Ford",
             "BMW",
             "Nissan",
-            //"Mazda"
+            "Mazda"
         };
 
 
         //list of car models simulating possible car models that can be detected by the camera
+        List<CarMake> carColor = new List<CarMake>
+        {
+            new CarMake
+            {
+                Make = "Honda",
+                Models = new List<string> { "Red", "Grey", "Blue", "White", "Silver", "Silver", "White" }
+            },
+            new CarMake
+            {
+                Make = "Toyota",
+                Models = new List<string> { "Beige", "Silver", "White", "Red", "Orange", "Black", "Black" }
+            },
+            new CarMake
+            {
+                Make = "Ford",
+                Models = new List<string> { "White", "Orange", "Grey", "Red", "Orange", "Green", "Green" }
+            },
+            new CarMake
+            {
+                Make = "BMW",
+                Models = new List<string> { "Grey", "White", "Black", "White", "Grey", "White", "Orange" }
+            },
+            new CarMake
+            {
+            Make = "Nissan",
+            Models = new List<string> { "Blue", "Red", "Orange", "Red", "Brown", "Grey", "Beige" }
+            },
+            new CarMake
+            {
+            Make = "Mazda",
+            Models = new List<string> { "White", "Red", "Blue", "Black", "Red", "White", "White" }
+            },
+        };
+
         List<CarMake> carModle = new List<CarMake>
         {
             new CarMake
@@ -126,12 +160,13 @@ namespace FidelParkingManagementSystem
             entryDate = DateTime.Now;
             entryTime = TimeSpan.Parse(DateTime.Now.ToString("HH:mm:ss"));
             ticketNumber = random.Next(1000, 9999);
-            color = "Red";
+            
             duration = "N/A";
 
-
+            int i = random.Next(carModle[randomIndex].Models.Count);
             vehicleMake = carMake[randomIndex];
-            vehicleModel = carModle[randomIndex].Models[random.Next(carModle[randomIndex].Models.Count)];
+            vehicleModel = carModle[randomIndex].Models[i];
+            color = carColor[randomIndex].Models[i];
             licensePlate = GenerateLicensePlate();
 
             // Display the details.
@@ -237,7 +272,7 @@ namespace FidelParkingManagementSystem
             vehicleDetected.LicensePlateNumber = licensePlate;
             vehicleDetected.Make = vehicleMake;
             vehicleDetected.Model = vehicleModel;
-            vehicleDetected.Color = "Red";
+            vehicleDetected.Color = color;
             vehicleDetected.Duration = "N/A";
             vehicleDetected.MediaId = vehiclePhotoID;
 
@@ -296,6 +331,7 @@ namespace FidelParkingManagementSystem
                 ticketNumber = carExiting.TicketNumber;
                 exitDate = DateTime.Now;
                 exitTime = TimeSpan.Parse(DateTime.Now.ToString("HH:mm:ss"));
+                color = carExiting.Color;
 
                 //calculate the duration the vehicle was in the lot
                 DateTime startDateTime = carExiting.EntryDate.Date.Add(carExiting.EntryTime);
@@ -327,7 +363,7 @@ namespace FidelParkingManagementSystem
                 lbTicket.Text = ticketNumber.ToString();
                 lbEntryTime.Text = entryTime.ToString();
                 lbExitTime.Text = exitTime.ToString();
-                lbColor.Text = "Red";
+                lbColor.Text = color;
                 lbmake.Text = vehicleMake;
                 lbModel.Text = vehicleModel;
                 lbLicensePlate.Text = carExiting.LicensePlateNumber;
@@ -342,6 +378,7 @@ namespace FidelParkingManagementSystem
 
             else
             {
+                loadingSate(false);
                 MessageBox.Show("No vehicles in the lot.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
@@ -614,6 +651,8 @@ namespace FidelParkingManagementSystem
                 MessageBox.Show("Please select a reservation to delete.");
             }
         }
+
+       
     }
 }
 // Class to hold a car make and its models.

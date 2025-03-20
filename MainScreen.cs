@@ -27,6 +27,16 @@ namespace FidelParkingManagementSystem
         {
             manageLotToolStripMenuItem.Visible = true;
             reportsToolStripMenuItem.Visible = true;
+            logoutToolStripMenuItem.Visible = true;
+            loginToolStripMenuItem1.Visible = false;
+        }
+
+        public void DisableMenus()
+        {
+            manageLotToolStripMenuItem.Visible = false;
+            reportsToolStripMenuItem.Visible = false;
+            logoutToolStripMenuItem.Visible = false;
+            loginToolStripMenuItem1.Visible = true;
         }
 
 
@@ -39,9 +49,90 @@ namespace FidelParkingManagementSystem
 
         private void loginToolStripMenuItem1_Click_1(object sender, EventArgs e)
         {
+
+            foreach (Form childForm in this.MdiChildren)
+            {
+                // Close each child form
+                childForm.Close();
+            }
             _showLoginScreen();
         }
 
+        
+
+        
+
+        private void exitToolStripMenuItem1_Click_1(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void manageLotToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+
+            foreach (Form childForm in this.MdiChildren)
+            {
+                // Close each child form
+                childForm.Close();
+            }
+            //Showing the managelot screen in the center of the mdi parent on load
+            ManageLotScreen manageLotScreen = ManageLotScreen.Instance;
+            MainScreen mainScreen = new MainScreen();
+            manageLotScreen.MdiParent = this;
+            manageLotScreen.Show();
+            manageLotScreen.BringToFront();
+            manageLotScreen.Focus();
+
+
+        }
+
+        private void allCarsInLotToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            foreach (Form childForm in this.MdiChildren)
+            {
+                // Close each child form
+                childForm.Close();
+            }
+            //Showing the allcarreport screen in the center of the mdi parent on load
+            AllCarReport allCarReport = AllCarReport.Instance;
+            allCarReport.MdiParent = this;
+            allCarReport.Show();
+            allCarReport.BringToFront();
+            allCarReport.Focus();
+
+        }
+
+        private void fiancialReportToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            foreach (Form childForm in this.MdiChildren)
+            {
+                // Close each child form
+                childForm.Close();
+            }
+            //Showing the financialreport screen in the center of the mdi parent on load
+            FinacialReport finacialReport = FinacialReport.Instance;
+            finacialReport.MdiParent = this;
+            finacialReport.Show();
+            finacialReport.BringToFront();
+            finacialReport.Focus();
+
+        }
+
+        private void logoutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            foreach (Form childForm in this.MdiChildren)
+            {
+                // Close each child form
+                childForm.Close();
+            }
+            DisableMenus();
+            _showLoginScreen();
+
+
+        }
         private void _showLoginScreen()
         {
 
@@ -63,28 +154,5 @@ namespace FidelParkingManagementSystem
             loginScreen.Focus();
 
         }
-
-        
-
-        private void exitToolStripMenuItem1_Click_1(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void manageLotToolStripMenuItem_Click_1(object sender, EventArgs e)
-        {
-
-            //Showing the managelot screen in the center of the mdi parent on load
-            ManageLotScreen manageLotScreen = ManageLotScreen.Instance;
-            MainScreen mainScreen = new MainScreen();
-            manageLotScreen.MdiParent = this;
-            manageLotScreen.Show();
-            manageLotScreen.BringToFront();
-            manageLotScreen.Focus();
-
-
-        }
-
-      
     }
 }

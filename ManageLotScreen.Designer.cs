@@ -684,7 +684,7 @@
             this.tlReservation.CellBorderStyle = System.Windows.Forms.TableLayoutPanelCellBorderStyle.Single;
             this.tlReservation.ColumnCount = 2;
             this.tlReservation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tlReservation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 195F));
+            this.tlReservation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 198F));
             this.tlReservation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tlReservation.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tlReservation.Controls.Add(this.tbColorRES, 1, 3);
@@ -710,21 +710,21 @@
             // 
             // tbColorRES
             // 
-            this.tbColorRES.Location = new System.Drawing.Point(187, 103);
+            this.tbColorRES.Location = new System.Drawing.Point(184, 103);
             this.tbColorRES.Name = "tbColorRES";
             this.tbColorRES.Size = new System.Drawing.Size(165, 20);
             this.tbColorRES.TabIndex = 58;
             // 
             // tbModelRES
             // 
-            this.tbModelRES.Location = new System.Drawing.Point(187, 70);
+            this.tbModelRES.Location = new System.Drawing.Point(184, 70);
             this.tbModelRES.Name = "tbModelRES";
             this.tbModelRES.Size = new System.Drawing.Size(165, 20);
             this.tbModelRES.TabIndex = 57;
             // 
             // tbMakeRES
             // 
-            this.tbMakeRES.Location = new System.Drawing.Point(187, 37);
+            this.tbMakeRES.Location = new System.Drawing.Point(184, 37);
             this.tbMakeRES.Name = "tbMakeRES";
             this.tbMakeRES.Size = new System.Drawing.Size(165, 20);
             this.tbMakeRES.TabIndex = 56;
@@ -732,7 +732,7 @@
             // tbLicensePlateRES
             // 
             this.tbLicensePlateRES.CharacterCasing = System.Windows.Forms.CharacterCasing.Upper;
-            this.tbLicensePlateRES.Location = new System.Drawing.Point(187, 4);
+            this.tbLicensePlateRES.Location = new System.Drawing.Point(184, 4);
             this.tbLicensePlateRES.Name = "tbLicensePlateRES";
             this.tbLicensePlateRES.Size = new System.Drawing.Size(165, 20);
             this.tbLicensePlateRES.TabIndex = 55;
@@ -784,7 +784,10 @@
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "ManageLotScreen";
+            this.ShowIcon = false;
             this.Text = "ManageLotsScreen";
             this.tlDetails.ResumeLayout(false);
             this.tlDetails.PerformLayout();
