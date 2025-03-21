@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity.Migrations;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -12,13 +14,15 @@ namespace FidelParkingManagementSystem
 {
     public partial class LoginScreen : Form
     {
+        Fidel_Parking_Management_SystemEntities _db;
         private static LoginScreen _instance;
         public LoginScreen()
         {
             //this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.ControlBox = false;
             InitializeComponent();
-           
+            _db = new Fidel_Parking_Management_SystemEntities();
+
         }
 
         //Singleton form
@@ -50,36 +54,68 @@ namespace FidelParkingManagementSystem
 
         private async void button1_Click_1(object sender, EventArgs e)
         {
-
-            
-
-            using (LoadingForm loadingForm = new LoadingForm())
+            LoadingForm loadingForm = new LoadingForm();
+            try
             {
-                loadingForm.StartPosition = FormStartPosition.Manual;
-                loadingForm.Location = new Point(
-                    this.Location.X + (this.Width - loadingForm.Width) / 2,
-                    this.Location.Y + (this.Height - loadingForm.Height) / 2
-                );
-
-                loadingForm.Show();
-                loadingForm.Refresh();
-                await Task.Delay(2000);
-
-                _showManageLotScreen();
-                await Task.Delay(1000);
-                //show hidden menus items
-                if (this.MdiParent is MainScreen parentForm)
+                SHA256 sha = SHA256.Create();
+                if (string.IsNullOrEmpty(tbUsername.Text) || string.IsNullOrEmpty(tbPassword.Text))
                 {
-                    parentForm.EnableMenus();
+                    MessageBox.Show("Please enter username and password");
+                    return;
                 }
-               
+                    loadingForm.StartPosition = FormStartPosition.Manual;
+                    loadingForm.Location = new Point(
+                        this.Location.X + (this.Width - loadingForm.Width) / 2,
+                        this.Location.Y + (this.Height - loadingForm.Height) / 2
+                    );
+
+                    loadingForm.Show();
+                    loadingForm.Refresh();
+                    var userName = tbUsername.Text.Trim();
+                    var password = tbPassword.Text.Trim();
+
+                //Convert the password to a byte array and hash it
+                byte[] bytes = Encoding.UTF8.GetBytes(password);
+                byte[] hash = sha.ComputeHash(bytes);
+                password = Convert.ToBase64String(hash);
 
 
-                loadingForm.Close();
-              
-               
+
+                //add a user to the database
+                UserAccount userACC = new UserAccount();
+                userACC.UserName = userName;
+                userACC.Password = password;
+                //userACC.Role = "admin";
+                //_db.UserAccounts.AddOrUpdate(userACC);
+                //_db.SaveChanges();
+
+
+
+                var user = _db.UserAccounts.Where(u => u.UserName == userName && u.Password == password).FirstOrDefault();
+                    if (user != null)
+                    {
+                        _showManageLotScreen();
+
+                        if (this.MdiParent is MainScreen parentForm)
+                        {
+                            parentForm.EnableMenus();
+                        }
+
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid Username or Password");
+                    }
+
+                    loadingForm.Close();
 
             }
+            catch (Exception ex)
+            {
+                loadingForm.Close();
+                MessageBox.Show("Error: " + ex.Message);
+            }
+           
                
         }
 

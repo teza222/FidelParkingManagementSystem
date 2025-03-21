@@ -19,8 +19,6 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 namespace FidelParkingManagementSystem
 {
 
-
-
     public partial class ManageLotScreen : Form
     {
         private static ManageLotScreen _instance;
@@ -479,7 +477,7 @@ namespace FidelParkingManagementSystem
 
             //show the reservation details on the form
             LoadReservationGridView();
-
+            clearVehicleDetails();
             imgCarImage.Visible = false;
             btEntryGate.Visible = false;
             btExitGate.Visible = false;
@@ -550,10 +548,10 @@ namespace FidelParkingManagementSystem
                 loadingSate(false);
 
                 MessageBox.Show(
-           "The Reservation was saved successfully.",
-           "Reservation Saved",
-           MessageBoxButtons.OK,
-           MessageBoxIcon.Information
+               "The Reservation was saved successfully.",
+               "Reservation Saved",
+               MessageBoxButtons.OK,
+               MessageBoxIcon.Information
        );
 
                 gvReservations.Refresh();
