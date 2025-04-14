@@ -24,7 +24,7 @@ namespace FidelParkingManagementSystem
         public System.TimeSpan EntryTime { get; set; }
         public Nullable<System.DateTime> ExitDate { get; set; }
         public Nullable<System.TimeSpan> ExitTime { get; set; }
-        public string Duration { get; set; }
+        public Nullable<int> UserId { get; set; }
         public Nullable<int> PaymentId { get; set; }
         public Nullable<int> MediaId { get; set; }
     

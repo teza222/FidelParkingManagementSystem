@@ -90,7 +90,6 @@ namespace FidelParkingManagementSystem
                 q.EntryTime,
                 q.ExitDate,
                 q.ExitTime,
-                q.Duration,
                 q.Payment.Paid
 
             }).ToList();

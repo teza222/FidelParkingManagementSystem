@@ -6,15 +6,18 @@ using System.Data;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Remoting.Contexts;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace FidelParkingManagementSystem
 {
@@ -35,7 +38,7 @@ namespace FidelParkingManagementSystem
         private string color;
         private String duration;
         private int mediaId;
-        private string imgUrl;
+        private string baseImgURL;
         private double targetX; // Target X position (center of the screen)
         private double speed = 5;
         private Timer timer;
@@ -116,7 +119,7 @@ namespace FidelParkingManagementSystem
             new CarMake
             {
                 Make = "BMW",
-                Models = new List<string> { "3 Series", "5 Series", "7 Series", "X3", "X5", "X7", "i8" }
+                Models = new List<string> { "3Series", "5Series", "7Series", "X3", "X5", "X7", "i8" }
             },
             new CarMake
             {
@@ -129,6 +132,44 @@ namespace FidelParkingManagementSystem
             Models = new List<string> { "Mazda3", "Mazda6", "CX-5", "CX-9", "MX-5 Miata", "CX-30", "MX-30" }
             },
         };
+
+        public ManageLotScreen()
+        {
+            InitializeComponent();
+            var timer = new Timer();
+            timer.Interval = 1000;
+            timer.Tick += Timer_Tick;
+            timer.Start();
+            _db = new Fidel_Parking_Management_SystemEntities();
+            baseImgURL = "https://jarentals.net/wp-content/cars/";
+            isEditMode = false;
+
+            UpdateSpaceNumbers();
+
+            xLocation = this.Location.X;
+            yLocation = this.Location.Y;
+
+
+        }
+
+        private void createClientAccount(String licensePlateNumber)
+        {
+            //Convert the license plate number for default password to a byte array and hash it
+            SHA256 sha = SHA256.Create();
+            byte[] bytes = Encoding.UTF8.GetBytes(licensePlate);
+            byte[] hash = sha.ComputeHash(bytes);
+            string _password = Convert.ToBase64String(hash);
+
+            //add a user to the database
+            UserAccount userACC = new UserAccount();
+            userACC.UserName = licensePlateNumber;
+            userACC.Password = _password;
+            userACC.Role = "user";
+            _db.UserAccounts.AddOrUpdate(userACC);
+            _db.SaveChanges();
+        }
+
+
 
         // Generates a random license plate number simulating scanner reading.
         static string GenerateLicensePlate()
@@ -146,7 +187,7 @@ namespace FidelParkingManagementSystem
                 digits[i] = (char)('0' + random.Next(0, 10));
             }
 
-            return new string(digits) + " " + new string(letters);
+            return new string(digits) + new string(letters);
         }
 
         // Generates a random car make and model. simulating a car detected by a Ai camera
@@ -177,25 +218,12 @@ namespace FidelParkingManagementSystem
             lbExitTime.Text = "N/A";
             lbLicensePlate.Text = licensePlate;
 
-        }
-
-        public ManageLotScreen()
-        {
-            InitializeComponent();
-            var timer = new Timer();
-            timer.Interval = 1000;
-            timer.Tick += Timer_Tick;
-            timer.Start();
-            _db = new Fidel_Parking_Management_SystemEntities();
-            isEditMode = false;
-
-            UpdateSpaceNumbers();
-
-            xLocation = this.Location.X;
-            yLocation = this.Location.Y;
-
+            // create a client account with the license plate number as the username and password
+            createClientAccount(licensePlate);
 
         }
+
+   
 
         private void Timer_Tick(object sender, EventArgs e)
         {
@@ -234,16 +262,44 @@ namespace FidelParkingManagementSystem
 
             try
             {
-
-
                 //demo detected car image simulating a car detected by the camera      
-                string imagePath = $"dectected_cars/{vehicleModel}.png";
-                Image image = Image.FromFile(imagePath);
-                imgCarImage.Image = image;
+                string imagePath = baseImgURL + vehicleModel + ".png";
+                imgCarImage.Image = await LoadImageFromUrlAsync(imagePath);
                 lbParkingAI.Text = "VEHICLE DETECTED!";
                 lbParkingAI.BackColor = Color.Crimson;
                 await Task.Delay(1000);
                 loadingSate(false);
+
+                //saving vehicle so-called url to the database
+                var vehiclePhoto = new Medium();
+                vehiclePhoto.url = imagePath;
+                _db.Media.Add(vehiclePhoto);
+                _db.SaveChanges();
+
+                //get vehicle photo id after saving to the database
+                int vehiclePhotoID = vehiclePhoto.id;
+
+                //save the vehicle details to the database
+                var vehicleDetected = new VehiclesDetected();
+                vehicleDetected.Operation = operation;
+                vehicleDetected.EntryDate = entryDate;
+                vehicleDetected.EntryTime = entryTime;
+                vehicleDetected.ExitDate = exitDate;
+                vehicleDetected.ExitTime = exitTime;
+                vehicleDetected.LicensePlateNumber = licensePlate;
+                vehicleDetected.Make = vehicleMake;
+                vehicleDetected.Model = vehicleModel;
+                vehicleDetected.Color = color;
+                // vehicleDetected.Duration = "N/A";
+                vehicleDetected.MediaId = vehiclePhotoID;
+
+                _db.VehiclesDetecteds.Add(vehicleDetected);
+                _db.SaveChanges();
+
+                ticketNumber = vehicleDetected.TicketNumber;
+                lbTicket.Text = ticketNumber.ToString();
+
+                UpdateSpaceNumbers();
 
             }
             catch (Exception ex)
@@ -251,36 +307,7 @@ namespace FidelParkingManagementSystem
                 loadingSate(false);
                 MessageBox.Show($"Error loading image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            //saving vehicle so-called url to the database
-            var vehiclePhoto = new Medium();
-            vehiclePhoto.url = vehicleModel;
-            _db.Media.Add(vehiclePhoto);
-            _db.SaveChanges();
-
-            //get vehicle photo id after saving to the database
-            int vehiclePhotoID = vehiclePhoto.id;
-
-            //save the vehicle details to the database
-            var vehicleDetected = new VehiclesDetected();
-            vehicleDetected.Operation = operation;
-            vehicleDetected.EntryDate = entryDate;
-            vehicleDetected.EntryTime = entryTime;
-            vehicleDetected.ExitDate = exitDate;
-            vehicleDetected.ExitTime = exitTime;
-            vehicleDetected.LicensePlateNumber = licensePlate;
-            vehicleDetected.Make = vehicleMake;
-            vehicleDetected.Model = vehicleModel;
-            vehicleDetected.Color = color;
-            vehicleDetected.Duration = "N/A";
-            vehicleDetected.MediaId = vehiclePhotoID;
-
-            _db.VehiclesDetecteds.Add(vehicleDetected);
-            _db.SaveChanges();
-
-            ticketNumber = vehicleDetected.TicketNumber;
-            lbTicket.Text = ticketNumber.ToString();
-
-            UpdateSpaceNumbers();
+           
         }
 
         //this function is called to update the space numbers on the form
@@ -347,13 +374,13 @@ namespace FidelParkingManagementSystem
                 carExiting.Operation = operation;
                 carExiting.ExitDate = exitDate;
                 carExiting.ExitTime = exitTime;
-                carExiting.Duration = duration;
+               // carExiting.Duration = duration;
                 _db.VehiclesDetecteds.AddOrUpdate(carExiting);
                 _db.SaveChanges();
 
                 //demo detected car image simulating a car detected by the camera      
-                string imagePath = $"dectected_cars/{vehicleModel}.png";
-                Image image = Image.FromFile(imagePath);
+                string imagePath = carExiting.Medium.url;
+                Image image = await LoadImageFromUrlAsync(imagePath);
                 imgCarImage.Image = image;
                 lbParkingAI.Text = "VEHICLE DETECTED!";
                 lbParkingAI.BackColor = Color.Crimson;
@@ -436,8 +463,8 @@ namespace FidelParkingManagementSystem
             lbOverstayed.Text = "";
             lbParkingAI.Text = "PARKING AI WAITING";
             lbParkingAI.BackColor = Color.DeepSkyBlue;
-            string imagePaths = "dectected_cars/blankcar.png";
-            Image images = Image.FromFile(imagePaths);
+            string imagePath = baseImgURL+"blankcar.png";
+            Image images = await LoadImageFromUrlAsync(imagePath);
             imgCarImage.Image = images;
 
             //Rservation details
@@ -650,7 +677,20 @@ namespace FidelParkingManagementSystem
             }
         }
 
-       
+        public async Task<Image> LoadImageFromUrlAsync(string url)
+        {
+            using (HttpClient httpClient = new HttpClient())
+            {
+                HttpResponseMessage response = await httpClient.GetAsync(url);
+                byte[] data = await response.Content.ReadAsByteArrayAsync();
+                using (MemoryStream mem = new MemoryStream(data))
+                {
+                    return Image.FromStream(mem);
+                }
+            }
+        }
+
+
     }
 }
 // Class to hold a car make and its models.
