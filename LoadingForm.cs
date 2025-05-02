@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Resources;
 using System.Windows.Forms;
 
 public class LoadingForm : Form
@@ -8,22 +9,26 @@ public class LoadingForm : Form
 
     public LoadingForm()
     {
-
         // Form Settings
         this.Text = "Loading...";
         this.Size = new Size(150, 150);
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.StartPosition = FormStartPosition.CenterParent;
-        this.ControlBox = false; // Removes close button
+        this.ControlBox = false;
+        this.TopMost = true;
 
-        // Spinning Loader (GIF)
+        // Spinner Settings
         spinner = new PictureBox
         {
             Size = new Size(50, 50),
-            Location = new Point(50, 40), // Centered
-            Image = Image.FromFile("dectected_cars/loader.gif"), // Use an actual loading GIF
+            Image = FidelParkingManagementSystem.Properties.Resources.loader, // Loaded from resources
             SizeMode = PictureBoxSizeMode.StretchImage
         };
+
+        // Center spinner
+        spinner.Location = new Point((this.ClientSize.Width - spinner.Width) / 2,
+                                     (this.ClientSize.Height - spinner.Height) / 2);
+
         this.Controls.Add(spinner);
     }
 }
